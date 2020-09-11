@@ -4,6 +4,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Any, Dict, Generic, Optional, TypeVar
 
+from design_patterns.utils import IdGenerator
+
 
 @dataclass
 class State:
@@ -19,11 +21,8 @@ StateT = TypeVar("StateT", bound=State)
 
 
 class Observer(Generic[StateT], ABC):
-    __CURRENT_GLOBAL_ID = 0
-
     def __init__(self) -> None:
-        self.__id: int = Observer.__CURRENT_GLOBAL_ID
-        Observer.__CURRENT_GLOBAL_ID += 1
+        self.__id = IdGenerator.next_id()
 
     @property
     def id(self) -> int:
