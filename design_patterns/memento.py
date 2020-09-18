@@ -32,14 +32,14 @@ class CareTaker:
     def __init__(self) -> None:
         self.__mementos: List[Memento] = []
 
-    def add_memento(self, memento: Memento) -> None:
+    def _add_memento(self, memento: Memento) -> None:
         self.__mementos.append(memento)
 
-    def get_memento(self, idx: int = -1) -> Memento:
+    def _get_memento(self, idx: int = -1) -> Memento:
         return self.__mementos[idx]
 
-    def delete_newer_mementos(self, idx: int) -> None:
-        self.__mementos = self.__mementos[:idx]
+    def _delete_newer_mementos(self, idx: int) -> None:
+        self.__mementos = self.__mementos[: idx + 1]
 
-    def memento_history_length(self) -> int:
+    def _memento_history_length(self) -> int:
         return len(self.__mementos)

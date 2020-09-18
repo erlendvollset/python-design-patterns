@@ -8,7 +8,6 @@ from design_patterns.observer import Observable, Observer, State
 @dataclass
 class TestState(State):
     x: int = 100
-    y: int = 200
 
 
 @pytest.fixture
@@ -23,18 +22,18 @@ def observable(state):
 
 @pytest.fixture
 def attach_observers(observable):
-    notifs = {}
+    observer_id_to_observed = {}
 
     class TestObserver(Observer[TestState]):
         def notify(self, state: TestState) -> None:
-            notifs[self.id] = state.x
+            observer_id_to_observed[self.id] = state.x
 
     n_observers = 10
 
     for _ in range(n_observers):
         observable.attach(TestObserver())
 
-    yield n_observers, notifs
+    yield n_observers, observer_id_to_observed
 
 
 class TestObserversNotified:
@@ -42,3 +41,5 @@ class TestObserversNotified:
         n_observers, notifs = attach_observers
         observable.state.x = 1
         assert notifs == {i: 1 for i in range(n_observers)}
+        observable.state.x = 1000
+        assert notifs == {i: 1000 for i in range(n_observers)}

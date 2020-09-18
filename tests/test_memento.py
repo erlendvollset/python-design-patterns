@@ -24,37 +24,48 @@ class DoubleCommand(ChangeCommand):
         self._thing.x *= 2
 
 
-class UndoRedoCaretaker(CareTaker):
+class ThingCareTaker(CareTaker):
     def __init__(self, thing: Thing):
         super().__init__()
         self.__thing = thing
-        self.__current_state: int = 0
-        self.add_memento(self.__thing.create_memento())
+        self._add_memento(self.__thing.create_memento())
 
     def add_one(self) -> None:
-        self.__execute(AddOneCommand(self.__thing))
+        self._execute(AddOneCommand(self.__thing))
 
     def double(self) -> None:
-        self.__execute(DoubleCommand(self.__thing))
+        self._execute(DoubleCommand(self.__thing))
 
-    def __execute(self, command: ChangeCommand):
+    def _restore_thing(self, memento_idx: int) -> None:
+        self.__thing.set_memento(self._get_memento(idx=memento_idx))
+
+    def _execute(self, command: ChangeCommand) -> None:
         command.execute()
-        self.__current_state += 1
-        self.delete_newer_mementos(self.__current_state)
-        self.add_memento(self.__thing.create_memento())
+        self._add_memento(self.__thing.create_memento())
+
+
+class UndoRedoCaretaker(ThingCareTaker):
+    def __init__(self, thing: Thing):
+        super().__init__(thing=thing)
+        self.__memento_idx: int = 0
+
+    def _execute(self, command: ChangeCommand) -> None:
+        self._delete_newer_mementos(self.__memento_idx)
+        self.__memento_idx += 1
+        super()._execute(command)
 
     def undo(self) -> bool:
-        if self.__current_state < 1:
+        if self.__memento_idx <= 0:
             return False
-        self.__current_state -= 1
-        self.__thing.set_memento(self.get_memento(self.__current_state))
+        self.__memento_idx -= 1
+        self._restore_thing(self.__memento_idx)
         return True
 
     def redo(self) -> bool:
-        if self.__current_state + 1 == self.memento_history_length():
+        if self.__memento_idx + 1 >= self._memento_history_length():
             return False
-        self.__current_state += 1
-        self.__thing.set_memento(self.get_memento(self.__current_state))
+        self.__memento_idx += 1
+        self._restore_thing(self.__memento_idx)
         return True
 
 
@@ -88,6 +99,7 @@ class TestMemento:
         care_taker.add_one()
         care_taker.undo()
         care_taker.undo()
+
         assert care_taker.redo() is True
         assert thing.x == 1
         assert care_taker.redo() is True
